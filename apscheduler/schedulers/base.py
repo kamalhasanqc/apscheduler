@@ -26,7 +26,7 @@ from apscheduler.events import (
     EVENT_JOBSTORE_ADDED, EVENT_JOBSTORE_REMOVED, EVENT_ALL, EVENT_JOB_MODIFIED, EVENT_JOB_REMOVED,
     EVENT_JOB_ADDED, EVENT_EXECUTOR_ADDED, EVENT_EXECUTOR_REMOVED, EVENT_ALL_JOBS_REMOVED,
     EVENT_JOB_SUBMITTED, EVENT_JOB_MAX_INSTANCES, EVENT_SCHEDULER_RESUMED, EVENT_SCHEDULER_PAUSED,
-    EVENT_JOB_BEFORE_REMOVE)
+    EVENT_JOB_BEFORE_REMOVE, EVENT_JOB_BEFORE_EXECUTE)
 
 
 class SchedulerState(Enum):
@@ -930,6 +930,8 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
                     run_times = run_times[-1:] if run_times and job.coalesce else run_times
                     if run_times:
                         try:
+                            event = JobEvent(EVENT_JOB_BEFORE_EXECUTE, job, jobstore)
+                            self._dispatch_event(event)
                             executor.submit_job(job, run_times)
                         except MaxInstancesReachedError:
                             self._logger.warning(
